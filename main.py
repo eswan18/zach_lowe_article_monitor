@@ -4,6 +4,7 @@ import pickle
 import tweepy as tw
 # Custom libraries
 import get_tweets_for_user as gtfu
+import get_tags_for_link as gtfl
 
 def main():
     # Import the predefined credentials dictionary
@@ -16,14 +17,25 @@ def main():
     lowe_tweets = gtfu.get_tweets_for_user('ZachLowe_NBA', api)
 
     # Find URLs of Zach's articles
-    zl_articles = []
+    zl_links = {}
     for tweet in lowe_tweets:
         for url in tweet.entities['urls']:
             link = url['expanded_url']
             if "espn.com" in link and "story" in link:
-                zl_articles.append(link)
-    # Return the uniq article links
-    return list(set(zl_articles))
+                # If this link isn't in the dict, add it and its date
+                if link not in zl_links:
+                    # Store the link and date in the dict
+                    zl_links[link] = tweet.created_at
+
+    zl_articles = []
+    for link in zl_links:
+        tags = gtfl.get_tags_for_link(link, ['og:title', 'og:description'])
+        title = tags['og:title']
+        desc = tags['og:description']
+        zl_articles.append((title, desc, link))
+
+    # Return the articles
+    return zl_articles
 
 if __name__ == "__main__":
     main()
