@@ -22,17 +22,22 @@ def main():
         for url in tweet.entities['urls']:
             link = url['expanded_url']
             if "espn.com" in link and "story" in link:
-                # If this link isn't in the dict, add it and its date
-                if link not in zl_links:
-                    # Store the link and date in the dict
-                    zl_links[link] = tweet.created_at
+                # Store the link and date in the dict
+                # Even if it already exists, overwrite it so you get the
+                # *earliest* instance of the article being tweeted
+                zl_links[link] = tweet.created_at
 
+    # Travers the links and extract title and description
     zl_articles = []
     for link in zl_links:
         tags = gtfl.get_tags_for_link(link, ['og:title', 'og:description'])
-        title = tags['og:title']
-        desc = tags['og:description']
-        zl_articles.append((title, desc, link))
+        try:
+            title = tags['og:title'].attrs['content']
+            desc = tags['og:description'].attrs['content']
+            date = zl_links[link]
+            zl_articles.append((date, title, desc, link))
+        except:
+            pass
 
     # Return the articles
     return zl_articles
