@@ -31,8 +31,8 @@ def main():
     # Travers the links and extract title and description
     #zl_articles = []
     fg = feed.FeedGenerator()
+    fg.id('blank_id')
     fg.title('Zach Lowe Feed')
-    fg.id('blanklink')
     for link in zl_links:
         valid_link = True
         tags = gtfl.get_tags_for_link(link, ['og:title', 'og:description'])
@@ -40,7 +40,6 @@ def main():
             title = tags['og:title'].attrs['content']
             desc = tags['og:description'].attrs['content']
             date = zl_links[link]
-            #zl_articles.append((date, title, desc, link))
         except:
             # If this isn't hacky...
             # I need to fix this later
@@ -54,11 +53,9 @@ def main():
             entry.description(desc)
             entry.content(desc)
             entry.author({'name': 'Zach Lowe'})
-            #entry.link(link)
+            entry.link({'href':link})
 
-    # Return the articles
     print fg.atom_str(pretty=True)
-    return zl_articles
 
 if __name__ == "__main__":
     main()
