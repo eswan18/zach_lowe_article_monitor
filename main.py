@@ -2,6 +2,7 @@
 
 import pickle
 import tweepy as tw
+import feedgen.feed as feed
 # Custom libraries
 import get_tweets_for_user as gtfu
 import get_tags_for_link as gtfl
@@ -28,18 +29,35 @@ def main():
                 zl_links[link] = tweet.created_at
 
     # Travers the links and extract title and description
-    zl_articles = []
+    #zl_articles = []
+    fg = feed.FeedGenerator()
+    fg.title('Zach Lowe Feed')
+    fg.id('blanklink')
     for link in zl_links:
+        valid_link = True
         tags = gtfl.get_tags_for_link(link, ['og:title', 'og:description'])
         try:
             title = tags['og:title'].attrs['content']
             desc = tags['og:description'].attrs['content']
             date = zl_links[link]
-            zl_articles.append((date, title, desc, link))
+            #zl_articles.append((date, title, desc, link))
         except:
-            pass
+            # If this isn't hacky...
+            # I need to fix this later
+            valid_link = False
+
+        if valid_link:
+            # Add an entry to the feed
+            entry = fg.add_entry()
+            entry.id(link)
+            entry.title(title)
+            entry.description(desc)
+            entry.content(desc)
+            entry.author({'name': 'Zach Lowe'})
+            #entry.link(link)
 
     # Return the articles
+    print fg.atom_str(pretty=True)
     return zl_articles
 
 if __name__ == "__main__":
