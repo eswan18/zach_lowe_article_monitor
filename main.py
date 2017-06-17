@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import pickle
+import pickle, pytz
 import tweepy as tw
 import feedgen.feed as feed
 # Custom libraries
@@ -19,6 +19,7 @@ def main():
 
     # Find URLs of Zach's articles
     zl_links = {}
+    gmt = pytz.timezone('GMT')
     for tweet in lowe_tweets:
         for url in tweet.entities['urls']:
             link = url['expanded_url']
@@ -26,20 +27,26 @@ def main():
                 # Store the link and date in the dict
                 # Even if it already exists, overwrite it so you get the
                 # *earliest* instance of the article being tweeted
-                zl_links[link] = tweet.created_at
+                zl_links[link] = gmt.localize(tweet.created_at)
 
-    # Travers the links and extract title and description
-    #zl_articles = []
+    # Now convert the dict to a list of tuples
+    zl_links = [(zl_links[link], link) for link in zl_links]
+    # Sort the tuples by their first value (the date)
+    zl_links = sorted(zl_links, key=lambda x: x[0], reverse=True)
+
+    # Traverse the links and extract title and description
     fg = feed.FeedGenerator()
     fg.id('blank_id')
     fg.title('Zach Lowe Feed')
+    # Iterate over the link tuples
     for link in zl_links:
         valid_link = True
-        tags = gtfl.get_tags_for_link(link, ['og:title', 'og:description'])
+        date = link[0]
+        url = link[1]
+        tags = gtfl.get_tags_for_link(url, ['og:title', 'og:description'])
         try:
             title = tags['og:title'].attrs['content']
             desc = tags['og:description'].attrs['content']
-            date = zl_links[link]
         except:
             # If this isn't hacky...
             # I need to fix this later
@@ -48,14 +55,16 @@ def main():
         if valid_link:
             # Add an entry to the feed
             entry = fg.add_entry()
-            entry.id(link)
+            entry.id(url)
             entry.title(title)
             entry.description(desc)
             entry.content(desc)
+            entry.updated(date)
             entry.author({'name': 'Zach Lowe'})
-            entry.link({'href':link})
+            entry.link({'href':url})
 
     print fg.atom_str(pretty=True)
+
 
 if __name__ == "__main__":
     main()
