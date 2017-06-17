@@ -36,8 +36,10 @@ def main():
 
     # Traverse the links and extract title and description
     fg = feed.FeedGenerator()
-    fg.id('blank_id')
+    fg.link({'href':'http://74.215.107.79:5000/static/out.atom', 'rel':'self'})
     fg.title('Zach Lowe Feed')
+    fg.id('http://74.215.107.79:5000/static/out.atom')
+    fg.description("Zach Lowe's Articles")
     # Iterate over the link tuples
     for link in zl_links:
         valid_link = True
@@ -55,11 +57,11 @@ def main():
         if valid_link:
             # Add an entry to the feed
             entry = fg.add_entry()
-            entry.id(url)
             entry.title(title)
             entry.description(desc)
             entry.content(desc)
             entry.updated(date)
+            entry.guid(url)
             entry.author({'name': 'Zach Lowe'})
             entry.link({'href':url})
 
